@@ -12,11 +12,14 @@ import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -29,8 +32,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private boolean firstCameraOnMyPosition = true;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 111;
-    private static final LatLng DEFAULT_LATLNG = new LatLng(49.841787, 24.031686);
+    private static final double DEFAULT_LATITUDE = 49.841787;
+    private static final double DEFAULT_LONGITUDE = 24.031686;
     private Marker mPositionMarker;
+    private ImageView myLocationButton;
+    private LatLng currentLatLng = new LatLng(DEFAULT_LATITUDE, DEFAULT_LONGITUDE);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +62,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 == PackageManager.PERMISSION_GRANTED)||(ContextCompat.checkSelfPermission(
                         this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {
             mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+            myLocationButton = (ImageView) findViewById(R.id.myLocationButton);
+            myLocationButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f));
+                }
+            });
             mPositionMarker = mMap.addMarker(new MarkerOptions()
                     .flat(true)
                     .icon(BitmapDescriptorFactory.fromBitmap(getBitmap(R.drawable.current_position)))
                     .anchor(0.5f, 1f)
-                    .position(DEFAULT_LATLNG));
+                    .position(currentLatLng));
         }
         try {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(
@@ -109,7 +123,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(getMyLocation(location), 17f));
                                 firstCameraOnMyPosition = false;
                             }
-                            mPositionMarker.setPosition(getMyLocation(location));
+                            currentLatLng = getMyLocation(location);
+                            mPositionMarker.setPosition(currentLatLng);
                         }
 
                         @Override
@@ -142,7 +157,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(getMyLocation(location), 17f));
                         firstCameraOnMyPosition = false;
                     }
-                    mPositionMarker.setPosition(getMyLocation(location));
+                    currentLatLng = getMyLocation(location);
+                    mPositionMarker.setPosition(currentLatLng);
                 }
 
                 @Override
